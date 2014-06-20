@@ -1,8 +1,8 @@
 let explode s =
   let rec aux l = function
-    | 0 -> l
+    | -1 -> l
     | i -> aux ((String.get s i)::l) (i - 1)
-  in aux [] (String.length s)
+  in aux [] ((String.length s) - 1)
 
 let concat s =
   List.fold_left (fun str elt -> str ^ elt) ""
