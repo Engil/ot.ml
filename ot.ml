@@ -41,17 +41,22 @@ let rec apply o l =
   match o with
   | EmptyOp ->
     (match l with
-     | [] -> Some []
-     | a::l0 -> None)
+     | "" -> Some ""
+     | _ -> None)
   | RetainOp o' ->
     (match l with
-     | [] -> None
-     | x::xs -> fmap (fun xs' -> x::xs') (apply o' xs))
-  | InsertOp (x, o') -> fmap (fun l' -> x::l') (apply o' l)
+     | "" -> None
+     | s ->
+       let x = Char.escaped (String.get s 0) in
+       let xs = String.sub s 1 ((String.length s) - 1) in
+       fmap (fun xs' -> x ^ xs') (apply o' xs))
+  | InsertOp (x, o') -> fmap (fun l' -> (Char.escaped x) ^ l') (apply o' l)
   | DeleteOp o' ->
     (match l with
-     | [] -> None
-     | a::xs -> apply o' xs)
+     | "" -> None
+     | s ->
+       let xs = String.sub s 1 ((String.length s) - 1) in
+       apply o' xs)
 
 let rec normalize = function
   | EmptyOp -> EmptyOp
