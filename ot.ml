@@ -1,3 +1,6 @@
+(* Code generated with Coq from the following repository *)
+(* https://github.com/Operational-Transformation/ot.v *)
+
 type 'a t =
   | EmptyOp
   | RetainOp of 'a t
