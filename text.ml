@@ -3,15 +3,15 @@ let flip f a x = f x a
 
 (* Used to handle operations lists *)
 let rec retaini ops = function
-  | 0 -> ops
+  | i when i <= 0 -> ops
   | i -> retaini (Ot.RetainOp (ops)) (i - 1)
 
 let rec deletei ops = function
-  | 0 -> ops
+  | i when i <= 0 -> ops
   | i -> deletei (Ot.DeleteOp (ops)) (i - 1)
 
 let rec addi str ops = function
-  | 0 -> ops
+  | i when i <= 0 -> ops
   | i -> addi str (Ot.InsertOp ((String.get str (i - 1)), ops)) (i - 1)
 
 (* Return a diff as a list of operations between two tests *)
@@ -42,15 +42,15 @@ let diffs_of_texts t1 t2 =
 
   (* Comparing from the start *)
   let rec iter (left, right) =
-    if left >= l1 then
-      if right >= l2 then
+    if left >= (l1 - 1) then
+      if right >= (l2 - 1) then
         None
       else if (String.get t1 left) != (String.get t2 right) then
         Some (left, right)
       else
-        iter (succ left, succ right)
+        Some (left, right)
     else
-    if right >= l2 then
+    if right >= (l2 - 1) then
       Some (left, right)
     else
     if (String.get t1 left) != (String.get t2 right) then
@@ -64,5 +64,12 @@ let diffs_of_texts t1 t2 =
   (* Return a list of operations if a difference is found *)
   match finish, begining with
   | None, None-> None
-  | Some d1, Some d2 -> Some (compute_ots d1 d2)
+  | Some (fl, fr), Some (bl, br) ->
+    if (fl = 0) && (bl = l1 - 1) then
+      begin
+      Printf.printf "fl %d fr %d bl %d br %d\n" fl fr bl br;
+      Some (compute_ots (l1, fr) (bl, br))
+        end
+    else
+      Some (compute_ots (fl, fr) (bl, br))
   | _ -> None
