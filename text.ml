@@ -39,24 +39,15 @@ let diffs_of_texts t1 t2 =
       else
         iter_reverse (pred left, pred right)
   in
-
-  (* Comparing from the start *)
-  let rec iter (left, right) =
-    if left >= (l1 - 1) then
-      if right >= (l2 - 1) then
-        None
-      else if (String.get t1 left) != (String.get t2 right) then
+  let rec iter = function
+    | left, right when left = l1 && right = l2 -> None
+    | left, right when left = l1 -> Some (l1, right)
+    | left, right when right = l2 -> Some (left, l2)
+    | left, right ->
+      if (String.get t1 left) != (String.get t2 right) then
         Some (left, right)
       else
-        Some (left, right)
-    else
-    if right >= (l2 - 1) then
-      Some (left, right)
-    else
-    if (String.get t1 left) != (String.get t2 right) then
-      Some (left, right)
-    else
-      iter (succ left, succ right) in
+        iter (succ left, succ right) in
 
   let finish = iter_reverse (l1 - 1, l2 - 1) in
   let begining = iter (0, 0) in
@@ -64,12 +55,5 @@ let diffs_of_texts t1 t2 =
   (* Return a list of operations if a difference is found *)
   match finish, begining with
   | None, None-> None
-  | Some (fl, fr), Some (bl, br) ->
-    if (fl = 0) && (bl = l1 - 1) then
-      begin
-      Printf.printf "fl %d fr %d bl %d br %d\n" fl fr bl br;
-      Some (compute_ots (l1, fr) (bl, br))
-        end
-    else
-      Some (compute_ots (fl, fr) (bl, br))
+  | Some (fl, fr), Some (bl, br) -> Some (compute_ots (fl, fr) (bl, br))
   | _ -> None
