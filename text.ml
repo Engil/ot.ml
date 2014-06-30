@@ -1,19 +1,5 @@
-type diff_state =
-  | Normal
-  | Tag of int
-  | Quote of int
-
 let (|>) x f = f x
 let flip f a x = f x a
-
-let is_tag = function
-  | Tag _ -> true
-  | _ -> false
-
-let is_quote = function
-  | Quote _ -> true
-  | _ -> false
-
 
 (* Used to handle operations lists *)
 let rec retaini ops = function
@@ -43,29 +29,24 @@ let diffs_of_texts t1 t2 =
   in
 
   (* Comparing from the end of both texts *)
-  let rec iter_reverse state = function
-    | -1, -1 -> None
-    | -1,  i -> Some (0, i)
-    |  i, -1 -> Some (i, 0)
-    | left, right ->
-      if c1 != c2 then
-        if is_tag state || is_quote state then
-          Some (left, right)
+  let diff iter_mod =
+    let module T = (val iter_mod : IterableText) in
+    let module Diff = RichText(T) in
+    let rec iter = function
+      | left, right when Diff.is_end left && Diff.is_end right -> None
+      | left, right when Diff.is_end left ->
+        Some (Diff.get_end left, Diff.get_end right)
+      | left, right when Diff.is_end right ->
+        Some (Diff.get_end left, Diff.get_end right)
+      | left, right ->
+        if (Diff.get_at left) != (Diff.get_at right) then
+          Some (Diff.get_end left, Diff.get_end right)
       else
-        iter_reverse (pred left, pred right)
-  in
-  let rec iter in_tag in_quote = function
-    | left, right when left = l1 && right = l2 -> None
-    | left, right when left = l1 -> Some (l1, right)
-    | left, right when right = l2 -> Some (left, l2)
-    | left, right ->
-      if (String.get t1 left) != (String.get t2 right) then
-        Some (left, right)
-      else
-        iter (succ left, succ right) in
+        iter (Diff.next left, Diff.next right) in
+    iter (Diff.create t1, Diff.create t2) in
 
-  let finish = iter_reverse (l1 - 1, l2 - 1) in
-  let begining = iter (0, 0) in
+  let finish = diff (module ReverseText : IterableText) in
+  let begining = diff (module NormalText : IterableText) in
 
   (* Return a list of operations if a difference is found *)
   match finish, begining with

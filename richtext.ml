@@ -39,7 +39,7 @@ module RichText(Text : IterableText) = struct
     | Normal
     | Tag of int
     | Quote of int
-    | End
+    | End of state
   type t = {doc : Text.t; state : state}
 
   let create s =
@@ -57,21 +57,41 @@ module RichText(Text : IterableText) = struct
     let new_doc = Text.next doc.doc in
     let new_state =
       if Text.is_at_bound new_doc then
-        End
+        End doc.state
       else if (Text.get_at new_doc) = Text.tag_open then
         match doc.state with
         | Normal -> Tag (Text.get_pos new_doc)
         | Tag _ -> assert false
         | Quote p -> Quote p
-        | End -> End
+        | End prev -> End prev
       else if (Text.get_at new_doc) = Text.tag_end then
         match doc.state with
         | Normal -> assert false
         | Tag _ -> Normal
         | Quote p -> Quote p
-        | End -> End
+        | End prev -> End prev
       else
         doc.state
     in
     {doc = new_doc; state = new_state}
+
+  let get_state doc = doc.state
+
+  let get_at doc = Text.get_at doc.doc
+
+  let is_end doc = match doc.state with End _ -> true | _ -> false
+
+  let get_end doc =
+    match doc.state with
+    | End prev ->
+      begin
+        match prev with
+        | Normal -> Text.get_pos doc.doc
+        | End _ -> assert false
+        | Quote p -> p
+        | Tag p -> p
+      end
+    | Normal -> Text.get_pos doc.doc
+    | Quote p -> p
+    | Tag p -> p
 end
