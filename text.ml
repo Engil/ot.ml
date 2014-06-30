@@ -1,5 +1,19 @@
+type diff_state =
+  | Normal
+  | Tag of int
+  | Quote of int
+
 let (|>) x f = f x
 let flip f a x = f x a
+
+let is_tag = function
+  | Tag _ -> true
+  | _ -> false
+
+let is_quote = function
+  | Quote _ -> true
+  | _ -> false
+
 
 (* Used to handle operations lists *)
 let rec retaini ops = function
@@ -29,17 +43,18 @@ let diffs_of_texts t1 t2 =
   in
 
   (* Comparing from the end of both texts *)
-  let rec iter_reverse = function
+  let rec iter_reverse state = function
     | -1, -1 -> None
     | -1,  i -> Some (0, i)
     |  i, -1 -> Some (i, 0)
     | left, right ->
-      if (String.get t1 left) != (String.get t2 right) then
-        Some (left, right)
+      if c1 != c2 then
+        if is_tag state || is_quote state then
+          Some (left, right)
       else
         iter_reverse (pred left, pred right)
   in
-  let rec iter = function
+  let rec iter in_tag in_quote = function
     | left, right when left = l1 && right = l2 -> None
     | left, right when left = l1 -> Some (l1, right)
     | left, right when right = l2 -> Some (left, l2)
