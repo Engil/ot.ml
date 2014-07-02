@@ -10,7 +10,7 @@ module type IterableText = sig
   val is_at_bound : t -> bool
 end
 
-module NormalText = struct
+module IterNormal = struct
   type t = {document : string; bound : int; pos : int}
   let tag_open = '<'
   let tag_end = '>'
@@ -22,7 +22,7 @@ module NormalText = struct
   let is_at_bound doc = doc.bound = doc.pos
 end
 
-module ReverseText = struct
+module IterReverse = struct
   let tag_open = '>'
   let tag_end = '<'
   type t = {document : string; bound : int; pos : int}
@@ -34,7 +34,7 @@ module ReverseText = struct
   let is_at_bound doc = doc.bound = doc.pos
 end
 
-module RichText(Text : IterableText) = struct
+module Diff(Text : IterableText) = struct
   type state =
     | Normal
     | Tag of int
@@ -76,11 +76,8 @@ module RichText(Text : IterableText) = struct
     {doc = new_doc; state = new_state}
 
   let get_state doc = doc.state
-
   let get_at doc = Text.get_at doc.doc
-
   let is_end doc = match doc.state with End _ -> true | _ -> false
-
   let get_end doc =
     match doc.state with
     | End prev ->
