@@ -4,7 +4,8 @@ let (|>) x f = f x
 let flip f a x = f x a
 
 (* Used to handle operations lists *)
-let rec retaini ops i = Ot.RetainOp (i, ops)
+let rec retaini ops i =
+  if i = 0 then ops else Ot.RetainOp (i, ops)
 
 let rec deletei ops = function
   | i when i <= 0 -> ops

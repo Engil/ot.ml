@@ -102,6 +102,10 @@ let pair_map f g p = (f (fst p)),(g (snd p))
 
 let option_pair_map f g mp = fmap (pair_map f g) mp
 
+let add_retain x = match x with
+  | RetainOp (i, xs) -> RetainOp(succ i, xs)
+  | _ -> RetainOp(0, x)
+
 let rec transform a =
   let rec transform' b =
     match a with
@@ -109,7 +113,7 @@ let rec transform a =
       (match b with
        | EmptyOp -> Some (EmptyOp,EmptyOp)
        | InsertOp (c, b') ->
-         option_pair_map (fun x -> RetainOp (c, x)) (fun x -> InsertOp (c, x))
+         option_pair_map (fun x -> RetainOp (0, x)) (fun x -> InsertOp (c, x))
            (transform' b')
        | _ -> None)
     | RetainOp (i, a) ->
@@ -121,12 +125,12 @@ let rec transform a =
          option_pair_map (fun x -> RetainOp (i, x)) (fun x -> RetainOp (i, x))
            (transform a' c')
        | InsertOp (c, b') ->
-         option_pair_map (fun x -> RetainOp (1, x)) (fun x -> InsertOp (c, x))
+         option_pair_map (fun x -> RetainOp (0, x)) (fun x -> InsertOp (c, x))
            (transform' b')
        | DeleteOp b' ->
          option_pair_map (fun x -> x) addDeleteOp (transform a' b'))
     | InsertOp (c, a') ->
-      option_pair_map (fun x -> InsertOp (c, x)) (fun x -> RetainOp (1 ,x))
+      option_pair_map (fun x -> InsertOp (c, x)) (fun x -> add_retain x)
         (transform a' b)
     | DeleteOp a' ->
       (match b with
