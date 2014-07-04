@@ -9,6 +9,11 @@ type 'a t =
 
 let fmap = (fun f a -> match a with Some e -> Some (f e) | None -> None)
 
+let iter_retain = function
+  | RetainOp(0, xs) -> xs
+  | RetainOp(i, xs) -> RetainOp(pred i, xs)
+  | x -> x
+
 let rec list_op_rect f f0 f1 f2 = function
   | EmptyOp -> f
   | RetainOp (0, l0) -> f0 l0 (list_op_rect f f0 f1 f2 l0)
