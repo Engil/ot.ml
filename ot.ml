@@ -52,10 +52,10 @@ let rec apply o l =
     (match l with
      | "" -> None
      | s ->
-       let x = Char.escaped (String.get s 0) in
+       let x = String.make 1 (String.get s 0) in
        let xs = String.sub s 1 ((String.length s) - 1) in
        fmap (fun xs' -> x ^ xs') (apply o' xs))
-  | InsertOp (x, o') -> fmap (fun l' -> (Char.escaped x) ^ l') (apply o' l)
+  | InsertOp (x, o') -> fmap (fun l' -> (String.make 1 x) ^ l') (apply o' l)
   | DeleteOp o' ->
     (match l with
      | "" -> None
