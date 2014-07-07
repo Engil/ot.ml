@@ -38,9 +38,11 @@ module Diff(Text : IterableText) = struct
   type state =
     | Normal
     | Tag of int
-    | Quote of int
+    | Quote of (char * int)
     | End of state
   type t = {doc : Text.t; state : state}
+
+  let is_quote c = c = '\'' || c = '"'
 
   let create s =
     let new_doc = (Text.create s) in
@@ -56,19 +58,26 @@ module Diff(Text : IterableText) = struct
   let next doc =
     let new_doc = Text.next doc.doc in
     let new_state =
+      let current = Text.get_at new_doc in
       if Text.is_at_bound new_doc then
         End doc.state
-      else if (Text.get_at new_doc) = Text.tag_open then
+      else if current = Text.tag_open then
         match doc.state with
         | Normal -> Tag (Text.get_pos new_doc)
         | Tag _ -> assert false
-        | Quote p -> Quote p
+        | Quote (c, p) -> Quote (c, p)
         | End prev -> End prev
-      else if (Text.get_at new_doc) = Text.tag_end then
+      else if current = Text.tag_end then
         match doc.state with
         | Normal -> assert false
         | Tag _ -> Normal
-        | Quote p -> Quote p
+        | Quote (c, p) -> Quote (c, p)
+        | End prev -> End prev
+      else if is_quote current then
+        match doc.state with
+        | Normal -> Normal
+        | Tag p -> Quote (current, p)
+        | Quote (c, p) -> if c = current then Tag p else Quote (c, p)
         | End prev -> End prev
       else
         doc.state
@@ -85,10 +94,10 @@ module Diff(Text : IterableText) = struct
         match prev with
         | Normal -> Text.get_pos doc.doc
         | End _ -> assert false
-        | Quote p -> p
+        | Quote (c, p) -> p
         | Tag p -> p
       end
     | Normal -> Text.get_pos doc.doc
-    | Quote p -> p
+    | Quote (c, p) -> p
     | Tag p -> p
 end
