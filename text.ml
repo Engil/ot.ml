@@ -37,10 +37,10 @@ let diffs_of_texts t1 t2 =
     Diff.(
       let rec iter = function
         | left, right when is_end left && is_end right -> None
-        | left, right when is_end left -> Some (get_end left, get_end right)
-        | left, right when is_end right -> Some (get_end left, get_end right)
+        | left, right when is_end left -> Some (get_end left right)
+        | left, right when is_end right -> Some (get_end left right)
         | left, right -> if (get_at left) != (get_at right) then
-            Some (get_end left, get_end right)
+            Some (get_end left right)
           else
             iter (next left, next right) in
       iter (create t1, create t2)) in

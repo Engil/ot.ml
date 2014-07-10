@@ -40,7 +40,7 @@ module Diff(Text : IterableText) = struct
     | Tag of int
     | Quote of (char * int)
     | End of state
-  type t = {doc : Text.t; state : state}
+  type t = {doc : Text.t; state : state;}
 
   let is_quote c = c = '\'' || c = '"'
 
@@ -85,19 +85,32 @@ module Diff(Text : IterableText) = struct
     {doc = new_doc; state = new_state}
 
   let get_state doc = doc.state
+
   let get_at doc = Text.get_at doc.doc
+
   let is_end doc = match doc.state with End _ -> true | _ -> false
-  let get_end doc =
-    match doc.state with
-    | End prev ->
-      begin
-        match prev with
-        | Normal -> Text.get_pos doc.doc
-        | End _ -> assert false
-        | Quote (c, p) -> p
-        | Tag p -> p
-      end
-    | Normal -> Text.get_pos doc.doc
-    | Quote (c, p) -> p
-    | Tag p -> p
+
+  let get_end doc doc2 =
+    let get_position d =
+      match d.state with
+      | End prev ->
+        begin
+          match prev with
+          | Normal -> Text.get_pos d.doc
+          | End _ -> assert false
+          | Quote (c, p) -> p
+          | Tag p -> p
+        end
+      | Normal -> Text.get_pos d.doc
+      | Quote (c, p) -> p
+      | Tag p -> p in
+    let pos_left = get_position doc in
+    let pos_right = get_position doc2 in
+    match doc.state, doc2.state with
+      | Normal, Tag p
+      | End _, Tag p
+      | Normal, Tag p
+      | End _, Tag p -> pos_right, pos_right
+      | _ -> pos_left, pos_right
+
 end
